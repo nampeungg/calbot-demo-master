@@ -39,14 +39,6 @@ photos, videos, and location.
         "https://graph.facebook.com/v2.6/me/thread_settings?access_token=PAGE_ACCESS_TOKEN"
     
 -----------------------------------------------------------------------------*/
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-  host     : 'np-server.database.windows.net',
-  user     : 'nampeungg',
-  password : 'Peung239.',
-  database : 'NP-DB'
-});
-
 
 var restify = require('restify');
 var builder = require('botbuilder');
@@ -88,6 +80,15 @@ bot.set(builder.Middleware.dialogVersion({ version: 1.0, resetCommand: /^reset/i
 
 bot.endConversationAction('goodbye', 'Goodbye :)', { matches: /^goodbye/i });
 bot.beginDialogAction('help', '/help', { matches: /^help/i });
+
+var mysql      = require('mysql');
+var connection = mysql.createConnection({
+  host     : 'np-server.database.windows.net',
+  user     : 'nampeungg',
+  password : 'Peung239.',
+  database : 'NP-DB'
+});
+
 
 //=========================================================
 // Bots Dialogs
