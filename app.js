@@ -63,6 +63,10 @@ var config = {
     options: {encrypt: true, database: 'NP-DB'}  
 };  
 
+var connection = new Connection(config);  
+connection.on('connect', function(err) {  
+});
+
 // Bot Storage: Here we register the state storage for your bot. 
 // Default store: volatile in-memory store - Only for prototyping!
 // We provide adapters for Azure Table, CosmosDb, SQL Azure, or you can implement your own!
@@ -98,11 +102,6 @@ bot.beginDialogAction('help', '/help', { matches: /^help/i });
 
 bot.dialog('/', [
     function (session) {
-        var connection = new Connection(config);  
-        connection.on('connect', function(err) {  
-        // If no error, then good to proceed.  
-            session.send("Connected");
-        });
         // Send a greeting and show help.
         var card = new builder.HeroCard(session)
             .title("Microsoft Bot Framework")
