@@ -81,14 +81,6 @@ bot.set(builder.Middleware.dialogVersion({ version: 1.0, resetCommand: /^reset/i
 bot.endConversationAction('goodbye', 'Goodbye :)', { matches: /^goodbye/i });
 bot.beginDialogAction('help', '/help', { matches: /^help/i });
 
-var mysql      = require('mysql2');
-var connection = mysql.createConnection({
-  host     : 'np-server.database.windows.net',
-  user     : 'nampeungg',
-  password : 'Peung239.',
-  database : 'NP-DB'
-});
-
 
 //=========================================================
 // Bots Dialogs
@@ -106,11 +98,7 @@ bot.dialog('/', [
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
         session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
-        
-        connection.connect((err) => {
-            if (err) session.send(err);
-            else session.send('Connected!');
-        });
+
         session.beginDialog('/help');
     },
     function (session, results) {
