@@ -60,7 +60,6 @@ var config = {
     userName: 'nampeungg',  
     password: 'Peung239.',  
     server: 'np-server.database.windows.net',  
-    // If you are on Microsoft Azure, you need this:  
     options: {encrypt: true, database: 'NP-DB'}  
 };  
 
@@ -99,13 +98,7 @@ bot.beginDialogAction('help', '/help', { matches: /^help/i });
 
 bot.dialog('/', [
     function (session) {
-        //Connect Database
-        var connection = new Connection(config);  
-        connection.on('connect', function(err) {  
-        // If no error, then good to proceed.  
-            session.send("Connected");
-        });
-        
+
         // Send a greeting and show help.
         var card = new builder.HeroCard(session)
             .title("Microsoft Bot Framework")
