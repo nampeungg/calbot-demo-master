@@ -67,19 +67,6 @@ var connector = new builder.ChatConnector({
 var bot = new builder.UniversalBot(connector).set('storage', inMemoryStorage); // Register in memory storage;
 server.post('/api/messages', connector.listen());
 
-var mysql      = require('mysql');
-var connection = mysql.createConnection({
-  host     : 'np-server.database.windows.net',
-  user     : 'nampeungg',
-  password : 'Peung239.',
-  database : 'NP-DB'
-});
-
-connection.connect((err) => {
-    if (err) throw err;
-    console.log('Connected!');
-});
-
 //=========================================================
 // Bots Middleware
 //=========================================================
