@@ -39,6 +39,14 @@ photos, videos, and location.
         "https://graph.facebook.com/v2.6/me/thread_settings?access_token=PAGE_ACCESS_TOKEN"
     
 -----------------------------------------------------------------------------*/
+var mysql      = require('mysql');
+var connection = mysql.createConnection({
+  host     : 'np-server.database.windows.net',
+  user     : 'nampeungg',
+  password : 'Peung239.',
+  database : 'NP-DB'
+});
+
 
 var restify = require('restify');
 var builder = require('botbuilder');
@@ -97,6 +105,11 @@ bot.dialog('/', [
         var msg = new builder.Message(session).attachments([card]);
         session.send(msg);
         session.send("Hi... I'm the Microsoft Bot Framework demo bot for Facebook. I can show you everything you can use our Bot Builder SDK to do on Facebook.");
+        
+        connection.connect((err) => {
+            if (err) session.send(err);
+            else session.send('Connected!');
+        });
         session.beginDialog('/help');
     },
     function (session, results) {
