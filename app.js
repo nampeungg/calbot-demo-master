@@ -81,7 +81,7 @@ bot.set(builder.Middleware.dialogVersion({ version: 1.0, resetCommand: /^reset/i
 bot.endConversationAction('goodbye', 'Goodbye :)', { matches: /^goodbye/i });
 bot.beginDialogAction('help', '/help', { matches: /^help/i });
 
-var mysql      = require('mysql');
+var mysql      = require('mysql2');
 var connection = mysql.createConnection({
   host     : 'np-server.database.windows.net',
   user     : 'nampeungg',
