@@ -153,7 +153,7 @@ function executeStatement(session,sql_query) {
     connection.execSql(request);  
 }  
 
-/*bot.dialog('/prompts', [
+bot.dialog('/prompts', [
     function (session) {
         session.send("Our Bot Builder SDK has a rich set of built-in prompts that simplify asking the user a series of questions. This demo will walk you through using each prompt. Just follow the prompts and you can quit at any time by saying 'cancel'.");
         builder.Prompts.text(session, "Prompts.text()\n\nEnter some text and I'll say it back.");
