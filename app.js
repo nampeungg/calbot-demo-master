@@ -125,6 +125,10 @@ bot.dialog('/Detail of Products', [
         {
             session.beginDialog('askSize');
         }
+        else if (results.response.entity == "Color")
+        {
+            session.beginDialog('askColor');
+        }
     }
 ]);
 
@@ -172,34 +176,31 @@ bot.dialog('askStock', [
     },
     function (session, results) {
         color = results.response
-        executeAskStock(session,"SELECT ID, Picture, Quantity FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' and Size = '"+size.toLowerCase()+"' and Color LIKE '%"+color.toLowerCase()+"%'");
+        executeAsk("SELECT ID, Name, Color, Picture, Quantity FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' and Size = '"+size.toLowerCase()+"' and Color LIKE '%"+color.toLowerCase()+"%'", function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.endDialog("Sorry, Product not found.");
+            }
+            else {
+            dataset.forEach(function(data){
+                var sendpic = new builder.Message(session)
+                .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: data.Picture
+            }]);
+            session.send(sendpic);
+            session.send("ID: %s\n\nName: %s\n\nColor: %s\n\nQuantity: %d" , data.ID,data.Name.capitalize(),data.Color.capitalize(), data.Quantity);
+            })
+            if(rows==1){
+                session.endDialog("Total 1 Product");
+            }
+            else{
+                session.endDialog("Total %d Products",rows);
+            }
+        }
+        });
     }
 ]);
 
-function executeAskStock(session,sql_query) {  
-    request = new Request(sql_query, function(err) {  
-    if (err) {  
-        session.send(err);}  
-    });  
-    var result = "";  
-    request.on('row', function(columns) {  
-        id = columns[0].value;
-        pic = columns[1].value;
-        stock = columns[2].value;
-        var sendpic = new builder.Message(session)
-        .attachments([{
-            contentType: "image/jpeg",
-            contentUrl: pic
-        }]);
-        session.send(sendpic);
-        session.send("ID: %s\n\nStock: %d" , id, stock);  
-    });  
-
-    request.on('doneInProc', function(rowCount, more) {  
-    session.send(rowCount + ' products returned');  
-    });  
-    connection.execSql(request);  
-}
 
 bot.dialog('askSize', [
     function (session) {
@@ -209,31 +210,85 @@ bot.dialog('askSize', [
         var size = ""
         var lists = []
         name = results.response
-        executeAsk("SELECT Name, Picture, Size FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By ID;",function(err,results,rows) {
+        executeAsk("SELECT DISTINCT Name, Size FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By Name;",function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.endDialog("Sorry, Product not found.");
+            }
+            else {
 
             for (var i = 0; i < (rows-1); i++){
-                if (results[i].Name == (results[i+1]).Name) {
-                    (results[i+1])['Size'] = (String(results[i].Size)).toUpperCase()+" "+(String(results[i+1].Size)).toUpperCase();
+                if (dataset[i].Name == (dataset[i+1]).Name) {
+                    (dataset[i+1])['Size'] = (String(dataset[i].Size)).toUpperCase()+" "+(String(dataset[i+1].Size)).toUpperCase();
                     lists.push(i);
                 }
             }
             for (var i = lists.length -1; i >= 0; i--){
-                results.splice(lists[i],1);
+                dataset.splice(lists[i],1);
             }
 
-            results.forEach(function(result){
-                var sendpic = new builder.Message(session)
+            dataset.forEach(function(data){
+                /*var sendpic = new builder.Message(session)
                 .attachments([{
                     contentType: "image/jpeg",
-                    contentUrl: result.Picture
+                    contentUrl: data.Picture
                 }]);
-                session.send(sendpic);
-                session.send("Product's Name: "+(result.Name).capitalize()+ "\n\nSize: "+result.Size);
-            })
+                session.send(sendpic);*/
+                session.send("Product's Name: "+(data.Name).capitalize()+ "\n\nSize: "+data.Size);
+            });
+            if(rows==1){
+                session.endDialog("Total 1 Product");
+            }
+            else{
+                session.endDialog("Total %d Products", dataset.length);
+            }
+        }
         }); 
     },
 ]);
  
+bot.dialog('askColor', [
+    function (session) {
+        builder.Prompts.text(session,"Enter Product's Name: ");
+    },
+    function (session, results) {
+        name = results.response
+        var lists = []
+        name = results.response
+        executeAsk("SELECT Name, Picture, Color FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By Name, Color;",function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.endDialog("Sorry, Product not found.");
+            }
+            else {
+
+            for (var i = 0; i < (rows-1); i++){
+                if (dataset[i].Name == (dataset[i+1]).Name && dataset[i].Color == (dataset[i+1]).Color) {
+                    lists.push(i);
+                }
+            }
+            for (var i = lists.length -1; i >= 0; i--){
+                dataset.splice(lists[i],1);
+            }
+
+            dataset.forEach(function(data){
+                var sendpic = new builder.Message(session)
+                .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: data.Picture
+                }]);
+                session.send(sendpic);
+                session.send("Product's Name: "+(data.Name).capitalize()+ "\n\nColor: "+data.Color.capitalize());
+            });
+            if(rows==1){
+                session.endDialog("Total 1 Product");
+            }
+            else{
+                session.endDialog("Total %d Products", dataset.length);
+            }
+        }
+        }); 
+    },
+]);
+
 
 function executeAsk(qryString, callback) {
 
@@ -265,6 +320,7 @@ function executeAsk(qryString, callback) {
     //console.log('resultSet: ' + resultSet);
     return resultSet;
 }
+
 
 
 String.prototype.capitalize = function() {
