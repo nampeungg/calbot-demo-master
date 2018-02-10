@@ -19,7 +19,7 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 var Connection = require('tedious').Connection;  
 var config = {  
     userName: 'nampeungg',  
-    password: 'Peung239.',  
+    password: 'xxyyzz123456789aabbcc*',  
     server: 'np-server.database.windows.net',  
     options: {encrypt: true, database: 'NP-DB'}  
 };  
@@ -132,55 +132,31 @@ bot.dialog('askPrice', [
     function (session) {
         builder.Prompts.text(session,"Enter Product Name: ");
     },
-    function (session,results){
-        
-        executeAsk(session,"SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'",function(err,results,rows){
-            results.forEach(function(result){
+    function (session,results){       
+        executeAsk("SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'", function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.endDialog("Sorry, Product not found.");
+            }
+            else {
+            dataset.forEach(function(data){
                 var sendpic = new builder.Message(session)
                 .attachments([{
                 contentType: "image/jpeg",
-                contentUrl: result.Picture
+                contentUrl: data.Picture
             }]);
             session.send(sendpic);
-            session.send("Name: %s\n\nPrice: %d Baht" , result.Name, result.price);
+            session.send("Name: %s\n\nPrice: %d Baht" , data.Name.capitalize(), data.Price);
             })
+            if(rows==1){
+                session.endDialog("Total 1 Product");
+            }
+            else{
+                session.endDialog("Total %d Products",rows);
+            }
+        }
         });
     }
 ]);
-
-
-/*function executeAskPrice(session,sql_query) {  
-    request = new Request(sql_query, function(err) {  
-    if (err) {  
-        session.send(err);}  
-    });  
-    var result = "";  
-    request.on('row', function(columns) {  
-        /*columns.forEach(function(column) {  
-          if (column.value === null) {  
-            session.send('NULL');  
-          } else {  
-            result+= column.value + " ";  
-          }  
-        });
-        name = columns[0].value;
-        pic = columns[1].value;
-        price = columns[2].value;
-        var sendpic = new builder.Message(session)
-        .attachments([{
-            contentType: "image/jpeg",
-            contentUrl: pic
-        }]);
-        session.send(sendpic);
-        session.send("Name: %s\n\nPrice: %d Baht" , name, price);  
-        //result ="";  
-    });  
-
-    request.on('doneInProc', function(rowCount, more) {  
-    session.send(rowCount + ' products returned');  
-    });  
-    connection.execSql(request);  
-}*/
 
 bot.dialog('askStock', [
     function (session) {
