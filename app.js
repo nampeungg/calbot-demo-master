@@ -134,12 +134,22 @@ bot.dialog('askPrice', [
     },
     function (session,results){
         
-        executeAskPrice(session,"SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'");
+        executeAsk(session,"SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'",function(err,results,rows){
+            results.forEach(function(result){
+                var sendpic = new builder.Message(session)
+                .attachments([{
+                contentType: "image/jpeg",
+                contentUrl: result.Picture
+            }]);
+            session.send(sendpic);
+            session.send("Name: %s\n\nPrice: %d Baht" , result.Name, result.price);
+            })
+        });
     }
 ]);
 
 
-function executeAskPrice(session,sql_query) {  
+/*function executeAskPrice(session,sql_query) {  
     request = new Request(sql_query, function(err) {  
     if (err) {  
         session.send(err);}  
@@ -152,7 +162,7 @@ function executeAskPrice(session,sql_query) {
           } else {  
             result+= column.value + " ";  
           }  
-        });*/  
+        });
         name = columns[0].value;
         pic = columns[1].value;
         price = columns[2].value;
@@ -170,7 +180,7 @@ function executeAskPrice(session,sql_query) {
     session.send(rowCount + ' products returned');  
     });  
     connection.execSql(request);  
-}
+}*/
 
 bot.dialog('askStock', [
     function (session) {
