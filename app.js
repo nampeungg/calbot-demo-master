@@ -1,5 +1,9 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var Type = require('type-of-is');
+
+
+
 
 //=========================================================
 // Bot Setup
@@ -115,6 +119,13 @@ bot.dialog('/Detail of Products', [
         if (results.response.entity == "Price") {
             session.beginDialog('askPrice');
         }
+        else if (results.response.entity == "Stock") {
+            session.beginDialog('askStock');
+        }
+        else if (results.response.entity == "Size")
+        {
+            session.beginDialog('askSize');
+        }
     }
 ]);
 
@@ -123,32 +134,155 @@ bot.dialog('askPrice', [
         builder.Prompts.text(session,"Enter Product Name: ");
     },
     function (session,results){
-        session.send(results.response);
-        executeStatement(session,"SELECT * FROM Products WHERE Name = 'Oxford Shirt'");
+        
+        executeAskPrice(session,"SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'");
     }
 ]);
 
 
-function executeStatement(session,sql_query) {  
+function executeAskPrice(session,sql_query) {  
     request = new Request(sql_query, function(err) {  
     if (err) {  
         session.send(err);}  
     });  
     var result = "";  
     request.on('row', function(columns) {  
-        columns.forEach(function(column) {  
+        /*columns.forEach(function(column) {  
           if (column.value === null) {  
             session.send('NULL');  
           } else {  
             result+= column.value + " ";  
           }  
-        });  
-        session.send(result);  
-        result ="";  
+        });*/  
+        name = columns[0].value;
+        pic = columns[1].value;
+        price = columns[2].value;
+        var sendpic = new builder.Message(session)
+        .attachments([{
+            contentType: "image/jpeg",
+            contentUrl: pic
+        }]);
+        session.send(sendpic);
+        session.send("Name: %s\n\nPrice: %d Baht" , name, price);  
+        //result ="";  
     });  
 
     request.on('doneInProc', function(rowCount, more) {  
-    session.send(rowCount + ' rows returned');  
+    session.send(rowCount + ' products returned');  
     });  
     connection.execSql(request);  
-}  
+}
+
+bot.dialog('askStock', [
+    function (session) {
+        builder.Prompts.text(session,"Enter Product's Name: ");
+    },
+    function (session, results) {
+        name = results.response
+        builder.Prompts.text(session, "Enter Product's Size: ");
+    },
+    function (session, results) {
+        size = results.response
+        builder.Prompts.text(session, "Enter Product's Color: ");
+    },
+    function (session, results) {
+        color = results.response
+        executeAskStock(session,"SELECT ID, Picture, Quantity FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' and Size = '"+size.toLowerCase()+"' and Color LIKE '%"+color.toLowerCase()+"%'");
+    }
+]);
+
+function executeAskStock(session,sql_query) {  
+    request = new Request(sql_query, function(err) {  
+    if (err) {  
+        session.send(err);}  
+    });  
+    var result = "";  
+    request.on('row', function(columns) {  
+        id = columns[0].value;
+        pic = columns[1].value;
+        stock = columns[2].value;
+        var sendpic = new builder.Message(session)
+        .attachments([{
+            contentType: "image/jpeg",
+            contentUrl: pic
+        }]);
+        session.send(sendpic);
+        session.send("ID: %s\n\nStock: %d" , id, stock);  
+    });  
+
+    request.on('doneInProc', function(rowCount, more) {  
+    session.send(rowCount + ' products returned');  
+    });  
+    connection.execSql(request);  
+}
+
+bot.dialog('askSize', [
+    function (session) {
+        builder.Prompts.text(session,"Enter Product's Name: ");
+    },
+    function (session, results) {
+        var size = ""
+        var lists = []
+        name = results.response
+        executeAsk("SELECT Name, Picture, Size FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By ID;",function(err,results,rows) {
+
+            for (var i = 0; i < (rows-1); i++){
+                if (results[i].Name == (results[i+1]).Name) {
+                    (results[i+1])['Size'] = (String(results[i].Size)).toUpperCase()+" "+(String(results[i+1].Size)).toUpperCase();
+                    lists.push(i);
+                }
+            }
+            for (var i = lists.length -1; i >= 0; i--){
+                results.splice(lists[i],1);
+            }
+
+            results.forEach(function(result){
+                var sendpic = new builder.Message(session)
+                .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: result.Picture
+                }]);
+                session.send(sendpic);
+                session.send("Product's Name: "+(result.Name).capitalize()+ "\n\nSize: "+result.Size);
+            })
+        }); 
+    },
+]);
+ 
+
+function executeAsk(qryString, callback) {
+
+    var request = new Request(qryString, function(err, rowCount) {
+        if (err) {
+            console.log('Error in request: ' + err);
+        } else {
+            console.log('Rows returned: ' + rowCount);
+        }
+        callback(err, resultSet,rowCount);
+    });
+
+    var resultSet = [];
+
+    request.on('row', function(columns) {
+        var row = {}; 
+        columns.forEach(function(column) {
+            if (column.isNull) {
+                row[column.metadata.colName] = null;
+            } else {
+                row[column.metadata.colName] = column.value;
+            } 
+        });
+        //console.log('Row is: ' + row);
+        resultSet.push(row);
+    });
+
+    connection.execSql(request);
+    //console.log('resultSet: ' + resultSet);
+    return resultSet;
+}
+
+
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
