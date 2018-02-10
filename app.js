@@ -1,6 +1,5 @@
 var restify = require('restify');
 var builder = require('botbuilder');
-var Type = require('type-of-is');
 
 
 
