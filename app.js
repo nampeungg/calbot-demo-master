@@ -535,9 +535,26 @@ bot.dialog('/FAQ', [
         else if (results.response.match(/.*ship.*/g) || results.response.match(/.*Ship.*/g)) {
             session.send("Shipment\n\n1. Thaipost\n\n2. Kerry");
         }
+        else{
+            session.send("Wait for the owner...")
+        }
+        session.beginDialog('FAQAgain');
     }
 ]);
 
+bot.dialog('FAQAgain', [
+    function(session) {
+        builder.Prompts.confirm(session, "Do you other questions?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('/FAQ');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+])
 
 function executeAsk(qryString, callback) {
 
