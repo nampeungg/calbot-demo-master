@@ -104,7 +104,7 @@ bot.dialog('/menu', [
 
 bot.dialog('/help', [
     function (session) {
-        session.endDialog("Global commands that are available anytime:\n\n* menu - Exits a demo and returns to the menu.\n* goodbye - End this conversation.\n* help - Displays these commands.");
+        session.endDialog("Global commands that are available anytime:\n\n* menu - Returns to the menu.\n* goodbye - End this conversation.\n* help - Displays these commands.");
     }
 ]);
 
@@ -139,7 +139,7 @@ bot.dialog('askPrice', [
     function (session,results){       
         executeAsk("SELECT DISTINCT Name, Picture, Price FROM Products WHERE Name LIKE '%"+(results.response).toLowerCase()+"%'", function(err,dataset,rows) {
             if(err || rows <= 0) {
-                session.endDialog("Sorry, Product not found.");
+                session.send("Sorry, Product not found.");
             }
             else {
             dataset.forEach(function(data){
@@ -152,15 +152,31 @@ bot.dialog('askPrice', [
             session.send("Name: %s\n\nPrice: %d Baht" , data.Name.capitalize(), data.Price);
             })
             if(rows==1){
-                session.endDialog("Total 1 Product");
+                session.send("Total 1 Product");
             }
             else{
-                session.endDialog("Total %d Products",rows);
+                session.send("Total %d Products",rows);
             }
         }
+        session.beginDialog('askPriceAgain');
         });
     }
 ]);
+
+bot.dialog('askPriceAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('askPrice');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
 
 bot.dialog('askStock', [
     function (session) {
@@ -178,7 +194,7 @@ bot.dialog('askStock', [
         color = results.response
         executeAsk("SELECT ID, Name, Color, Picture, Quantity FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' and Size = '"+size.toLowerCase()+"' and Color LIKE '%"+color.toLowerCase()+"%'", function(err,dataset,rows) {
             if(err || rows <= 0) {
-                session.endDialog("Sorry, Product not found.");
+                session.send("Sorry, Product not found.");
             }
             else {
             dataset.forEach(function(data){
@@ -191,16 +207,30 @@ bot.dialog('askStock', [
             session.send("ID: %s\n\nName: %s\n\nColor: %s\n\nQuantity: %d" , data.ID,data.Name.capitalize(),data.Color.capitalize(), data.Quantity);
             })
             if(rows==1){
-                session.endDialog("Total 1 Product");
+                session.send("Total 1 Product");
             }
             else{
-                session.endDialog("Total %d Products",rows);
-            }
+                session.send("Total %d Products",rows);
+            }           
         }
+        session.beginDialog('askStockAgain');
         });
     }
 ]);
 
+bot.dialog('askStockAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('askStock');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
 
 bot.dialog('askSize', [
     function (session) {
@@ -212,7 +242,7 @@ bot.dialog('askSize', [
         name = results.response
         executeAsk("SELECT DISTINCT Name, Size FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By Name;",function(err,dataset,rows) {
             if(err || rows <= 0) {
-                session.endDialog("Sorry, Product not found.");
+                session.send("Sorry, Product not found.");
             }
             else {
 
@@ -227,25 +257,35 @@ bot.dialog('askSize', [
             }
 
             dataset.forEach(function(data){
-                /*var sendpic = new builder.Message(session)
-                .attachments([{
-                    contentType: "image/jpeg",
-                    contentUrl: data.Picture
-                }]);
-                session.send(sendpic);*/
                 session.send("Product's Name: "+(data.Name).capitalize()+ "\n\nSize: "+data.Size);
             });
             if(rows==1){
-                session.endDialog("Total 1 Product");
+                session.send("Total 1 Product");
             }
             else{
-                session.endDialog("Total %d Products", dataset.length);
+                session.send("Total %d Products", dataset.length);
             }
         }
+        session.beginDialog('askSizeAgain');
         }); 
     },
 ]);
  
+
+bot.dialog('askSizeAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('askSize');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
 bot.dialog('askColor', [
     function (session) {
         builder.Prompts.text(session,"Enter Product's Name: ");
@@ -256,7 +296,7 @@ bot.dialog('askColor', [
         name = results.response
         executeAsk("SELECT Name, Picture, Color FROM Products WHERE Name LIKE '%"+name.toLowerCase()+"%' Order By Name, Color;",function(err,dataset,rows) {
             if(err || rows <= 0) {
-                session.endDialog("Sorry, Product not found.");
+                session.send("Sorry, Product not found.");
             }
             else {
 
@@ -279,14 +319,223 @@ bot.dialog('askColor', [
                 session.send("Product's Name: "+(data.Name).capitalize()+ "\n\nColor: "+data.Color.capitalize());
             });
             if(rows==1){
-                session.endDialog("Total 1 Product");
+                session.send("Total 1 Product");
             }
             else{
-                session.endDialog("Total %d Products", dataset.length);
+                session.send("Total %d Products", dataset.length);
             }
         }
+        session.beginDialog('askColorAgain');
         }); 
     },
+]);
+
+bot.dialog('askColorAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('askColor');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
+
+
+bot.dialog('/Recommendation', [
+    function (session) {
+        session.send("What factor are you interested? Please tell me.")
+        builder.Prompts.choice(session, "Please Choose : ", "Color|Type|Color&Type");
+    },
+    function (session, results) {
+        if (results.response.entity == "Color") {
+            session.beginDialog('recColor');
+        }
+        else if (results.response.entity == "Type") {
+            session.beginDialog('recType');
+        }
+        else if (results.response.entity == "Color&Type")
+        {
+            session.beginDialog('recColorType');
+        }
+    }
+]);
+
+
+bot.dialog('recColor', [
+    function (session) {
+        builder.Prompts.text(session, "Enter Color: ");
+    },
+    function (session, results) {
+        color = results.response
+        executeAsk("SELECT DISTINCT Name, Picture, Color FROM Products WHERE Color LIKE '%"+color.toLowerCase()+"%' Order By Name, Color;",function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.send("Sorry, Product not found.");
+            }
+            else {
+                dataset.forEach(function(data){
+                    var sendpic = new builder.Message(session)
+                    .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: data.Picture
+                }]);
+                session.send(sendpic);
+                session.send("Name: %s\n\nColor: %s" , data.Name.capitalize(), data.Color);
+                })
+                if(rows==1){
+                    session.send("Total 1 Product");
+                }
+                else{
+                    session.send("Total %d Products",rows);
+                }
+            }
+            session.beginDialog('recColorAgain');
+        }); 
+    }
+])
+
+bot.dialog('recColorAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('recColor');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
+bot.dialog('recType', [
+    function (session) {
+        builder.Prompts.text(session, "Enter Type: ");
+    },
+    function (session, results) {
+        type = results.response
+        executeAsk("SELECT DISTINCT Name, Color, Picture FROM Products WHERE Type LIKE '%"+type.toLowerCase()+"%' Order By Name, Color;",function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.send("Sorry, Product not found.");
+            }
+            else {
+                dataset.forEach(function(data){
+                    var sendpic = new builder.Message(session)
+                    .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: data.Picture
+                }]);
+                session.send(sendpic);
+                session.send("Name: %s\n\nColor: %s" , data.Name.capitalize(), data.Color);
+                })
+                if(rows==1){
+                    session.send("Total 1 Product");
+                }
+                else{
+                    session.send("Total %d Products",rows);
+                }
+            }
+            session.beginDialog('recTypeAgain');
+        }); 
+    }
+])
+
+bot.dialog('recTypeAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('recType');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
+
+bot.dialog('recColorType', [
+    function (session) {
+        builder.Prompts.text(session, "Enter Color: ");
+    },
+    function (session, results) {
+        color = results.response
+        builder.Prompts.text(session, "Enter Type: ");
+    },
+    function (session, results) {
+        type = results.response
+        executeAsk("SELECT DISTINCT Name, Color, Picture FROM Products WHERE Type LIKE '%"+type.toLowerCase()+"%' and Color LIKE '%"+color.toLowerCase()+"%' Order By Name, Color;",function(err,dataset,rows) {
+            if(err || rows <= 0) {
+                session.send("Sorry, Product not found.");
+            }
+            else {
+                dataset.forEach(function(data){
+                    var sendpic = new builder.Message(session)
+                    .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: data.Picture
+                }]);
+                session.send(sendpic);
+                session.send("Name: %s\n\nColor: %s" , data.Name.capitalize(), data.Color);
+                })
+                if(rows==1){
+                    session.send("Total 1 Product");
+                }
+                else{
+                    session.send("Total %d Products",rows);
+                }
+            }
+            session.beginDialog('recColorTypeAgain');
+        }); 
+    }
+])
+
+bot.dialog('recColorTypeAgain',[
+    function(session) {
+        builder.Prompts.confirm(session, "Do you want to find again?");
+    },
+    function (session, results) {
+        if (results.response) {
+            session.beginDialog('recColorType');
+        }
+        else {
+            session.endDialog("Back to menu...");
+        }
+    }
+]);
+
+bot.dialog('/FAQ', [
+    function (session) {
+        builder.Prompts.text(session,"What do you want to know?")
+    },
+    function (session, results) {
+        if (results.response.match(/.*payment.*/g) || results.response.match(/.*Payment.*/g)) {
+            session.send("Payment Methods\n\n1. ATM Bank\n\n2. Internet Banking\n\n3. VISA Card");
+        }
+        else if (results.response.match(/.*size.*/g) || results.response.match(/.*Size.*/g)) {
+            var pic = new builder.Message(session)
+                    .attachments([{
+                    contentType: "image/jpeg",
+                    contentUrl: "https://image.ibb.co/cnNsan/size.jpg"
+                }]);
+            session.send(pic);
+        }
+        else if (results.response.match(/.*return.*/g) || results.response.match(/.*return.*/g)
+        || results.response.match(/.*refund.*/g) || results.response.match(/.*refund.*/g)) {
+            session.send("Returns & Refund\n\n Please send an email to npshop@chatbot.com\n\n1. Picture of Products\n\n2. Reason\n\n3. Order ID");
+        }
+        else if (results.response.match(/.*order.*/g) || results.response.match(/.*order.*/g)) {
+            session.send("Product Order\n\nPlease send an email to npshop@chatbot.com\n\n1. Product's ID\n\n2. Quantity\n\n3. Name, Address and Mobile Phone");
+        }
+        else if (results.response.match(/.*ship.*/g) || results.response.match(/.*Ship.*/g)) {
+            session.send("Shipment\n\n1. Thaipost\n\n2. Kerry");
+        }
+    }
 ]);
 
 
@@ -296,7 +545,7 @@ function executeAsk(qryString, callback) {
         if (err) {
             console.log('Error in request: ' + err);
         } else {
-            console.log('Rows returned: ' + rowCount);
+            //console.log('Rows returned: ' + rowCount);
         }
         callback(err, resultSet,rowCount);
     });
