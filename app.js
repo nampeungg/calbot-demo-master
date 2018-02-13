@@ -3,10 +3,10 @@ var builder = require('botbuilder');
 const handoff = require('botbuilder-handoff');
 const express = require('express');
 
-const server = express();
-server.listen(process.env.port || process.env.PORT || 3978, '::', () => {
+//const server = express();
+/*server.listen(process.env.port || process.env.PORT || 3978, '::', () => {
     console.log('Server Up');
-});
+});*/
 
 
 
@@ -15,10 +15,10 @@ server.listen(process.env.port || process.env.PORT || 3978, '::', () => {
 //=========================================================
 
 // Setup Restify Server
-/*var server = restify.createServer();
+var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
    console.log('%s listening to %s', server.name, server.url); 
-});*/
+});
 
 
 
@@ -116,12 +116,12 @@ bot.dialog('/help', [
     }
 ]);
 
-bot.dialog('/connectToHuman', (session)=>{
+/*bot.dialog('/connectToHuman', (session)=>{
     session.send("Hold on, buddy! Connecting you to the next available agent!");
     handoff.triggerHandoff(session);
 }).triggerAction({
     matches:  /^agent/i,
-});
+});*/
 
 
 bot.dialog('/Detail of Products', [
