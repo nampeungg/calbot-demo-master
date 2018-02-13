@@ -111,7 +111,7 @@ bot.dialog('/help', [
 bot.dialog('/Detail of Products', [
     function (session) {
         session.send("What do you want to know about our products? Please tell me.")
-        builder.Prompts.choice(session, "Please Choose : ", "Price|Stock|Size|Color|none");
+        builder.Prompts.choice(session, "Please Choose : ", "Price|Stock|Size|Color");
     },
     function (session, results) {
         session.send("You want to know about the "+results.response.entity+"...")
